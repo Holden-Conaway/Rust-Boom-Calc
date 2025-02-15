@@ -1,5 +1,6 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QTextEdit, QVBoxLayout, QHBoxLayout, QMessageBox
+from PyQt5.QtCore import Qt
 
 # Crafting recipes dictionary
 craftingRecipes = {
@@ -45,60 +46,128 @@ def calcResources(exploType, quantity):
 
     return result
 
-def on_calculate():
-    explosive_type = explosive_type_var.get()
-    try:
-        quantity = int(quantity_entry.get())
-    except ValueError:
-        messagebox.showerror("Invalid Input", "Please enter a valid number for quantity.")
-        return
+class BoomCalculatorApp(QWidget):
+    def __init__(self):
+        super().__init__()
 
-    if explosive_type not in craftingRecipes:
-        messagebox.showerror("Invalid Explosive", "Please select a valid explosive type.")
-        return
+        self.setWindowTitle("Rust Boom Calculator")
+        self.setGeometry(100, 100, 400, 500)
 
-    result = calcResources(explosive_type, quantity)
-    result_text.config(state=tk.NORMAL)
-    result_text.delete(1.0, tk.END)
-    result_text.insert(tk.END, result)
-    result_text.config(state=tk.DISABLED)
+        # Layouts
+        main_layout = QVBoxLayout(self)
+        form_layout = QVBoxLayout()
+        button_layout = QHBoxLayout()
 
-# Set up the main window
-root = tk.Tk()
-root.title("Rust Boom Calculator")
-root.geometry("400x400")
+        # Explosive Type Dropdown
+        self.explosive_type_label = QLabel("Select Explosive Type:")
+        self.explosive_type_dropdown = QComboBox(self)
+        self.explosive_type_dropdown.addItems(craftingRecipes.keys())
+        self.explosive_type_dropdown.setCurrentText("Satchel Charge")
 
-# Apply a non-macOS theme for `ttk`
-style = ttk.Style()
-style.theme_use("clam")  # Use a theme that supports background colors
+        # Quantity Input
+        self.quantity_label = QLabel("Enter Quantity:")
+        self.quantity_entry = QLineEdit(self)
+        self.quantity_entry.setPlaceholderText("Enter quantity")
 
-# Create a frame with background color
-main_frame = tk.Frame(root, bg="#2c3e50")
-main_frame.pack(fill="both", expand=True)
+        # Calculate Button
+        self.calculate_button = QPushButton("Calculate Resources", self)
+        self.calculate_button.clicked.connect(self.on_calculate)
 
-# Use `tk.Label` instead of `ttk.Label` for background color support
-explosive_type_label = tk.Label(main_frame, text="Select Explosive Type:", background="#2c3e50", foreground="white", font=("Arial", 12))
-explosive_type_label.pack(pady=5)
+        # Quit Button
+        self.quit_button = QPushButton("Quit", self)
+        self.quit_button.clicked.connect(self.close)
 
-explosive_type_var = tk.StringVar()
-explosive_type_var.set("Satchel Charge")
-explosive_type_dropdown = ttk.Combobox(main_frame, textvariable=explosive_type_var, values=list(craftingRecipes.keys()), state="readonly")
-explosive_type_dropdown.pack(pady=5)
+        # Result Text Box
+        self.result_text = QTextEdit(self)
+        self.result_text.setReadOnly(True)
+        self.result_text.setPlaceholderText("Results will be shown here...")
 
-# Quantity Input
-quantity_label = tk.Label(main_frame, text="Enter Quantity:", background="#2c3e50", foreground="white", font=("Arial", 12))
-quantity_label.pack(pady=5)
+        # Add widgets to layouts
+        form_layout.addWidget(self.explosive_type_label)
+        form_layout.addWidget(self.explosive_type_dropdown)
+        form_layout.addWidget(self.quantity_label)
+        form_layout.addWidget(self.quantity_entry)
 
-quantity_entry = tk.Entry(main_frame, font=("Arial", 14), justify="center")
-quantity_entry.pack(pady=5, ipadx=5, ipady=5)
+        button_layout.addWidget(self.calculate_button)
+        button_layout.addWidget(self.quit_button)
 
-# Calculate Button
-calculate_button = ttk.Button(main_frame, text="Calculate Resources", command=on_calculate)
-calculate_button.pack(pady=10)
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.result_text)
 
-# Result Text Box
-result_text = tk.Text(main_frame, height=10, width=50, state=tk.DISABLED, font=("Arial", 12), wrap=tk.WORD, bg="#ecf0f1")
-result_text.pack(pady=10, padx=10)
+        self.setLayout(main_layout)
 
-# Run the application
-root.mainloop()
+        # Apply styling (QSS)
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #2c3e50;
+                color: white;
+                font-family: Arial, sans-serif;
+            }
+
+            QLabel {
+                font-size: 14px;
+            }
+
+            QComboBox, QLineEdit, QPushButton, QTextEdit {
+                background-color: #34495e;
+                color: white;
+                border: 2px solid #7f8c8d;
+                padding: 5px;
+                font-size: 14px;
+            }
+
+            QComboBox:hover, QLineEdit:hover, QPushButton:hover, QTextEdit:hover {
+                background-color: #1abc9c;
+            }
+
+            QPushButton {
+                background-color: #e74c3c;
+                border-radius: 5px;
+                padding: 10px;
+                font-weight: bold;
+            }
+
+            QPushButton:hover {
+                background-color: #c0392b;
+            }
+
+            QTextEdit {
+                margin-top: 20px;
+                font-size: 12px;
+                background-color: #ecf0f1;
+                color: #2c3e50;
+            }
+
+            QPushButton#quit_button {
+                background-color: #95a5a6;
+            }
+
+            QPushButton#quit_button:hover {
+                background-color: #7f8c8d;
+            }
+        """)
+
+    def on_calculate(self):
+        explosive_type = self.explosive_type_dropdown.currentText()
+        try:
+            quantity = int(self.quantity_entry.text())
+        except ValueError:
+            self.show_error("Invalid Input", "Please enter a valid number for quantity.")
+            return
+
+        if explosive_type not in craftingRecipes:
+            self.show_error("Invalid Explosive", "Please select a valid explosive type.")
+            return
+
+        result = calcResources(explosive_type, quantity)
+        self.result_text.setPlainText(result)
+
+    def show_error(self, title, message):
+        QMessageBox.critical(self, title, message)
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = BoomCalculatorApp()
+    window.show()
+    sys.exit(app.exec_())

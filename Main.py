@@ -46,12 +46,38 @@ def calcResources(exploType, quantity):
 
     return result
 
+def checkCraftable(rawResources):
+    canCraft = []
+    craftable_info = {}
+
+    for item, recipe in craftingRecipes.items():
+        # Determine the maximum number of items that can be crafted
+        min_items = float('inf')  # Start with an infinite number of possible items
+        for resource, amount_needed in recipe.items():
+            if resource not in rawResources:
+                min_items = 0
+                break
+            available = rawResources.get(resource, 0)
+            possible_items = available // amount_needed
+            min_items = min(min_items, possible_items)
+
+        if min_items > 0:
+            craftable_info[item] = min_items
+
+    if craftable_info:
+        result = "With the provided resources, you can craft the following:\n"
+        for item, count in craftable_info.items():
+            result += f"- {count} {item}(s)\n"
+        return result
+    else:
+        return "With the provided resources, you cannot craft anything."
+
 class BoomCalculatorApp(QWidget):
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Rust Boom Calculator")
-        self.setGeometry(100, 100, 400, 500)
+        self.setGeometry(100, 100, 400, 600)
 
         # Layouts
         main_layout = QVBoxLayout(self)
@@ -69,6 +95,11 @@ class BoomCalculatorApp(QWidget):
         self.quantity_label = QLabel("Enter Quantity:")
         self.quantity_entry = QLineEdit(self)
         self.quantity_entry.setPlaceholderText("Enter quantity")
+
+        # Raw Resources Input
+        self.resources_label = QLabel("Enter Your Raw Resources (separate with commas, e.g. sulfur=1000, charcoal=2000):")
+        self.resources_entry = QLineEdit(self)
+        self.resources_entry.setPlaceholderText("e.g. sulfur=1000, charcoal=2000")
 
         # Calculate Button
         self.calculate_button = QPushButton("Calculate Resources", self)
@@ -88,6 +119,8 @@ class BoomCalculatorApp(QWidget):
         form_layout.addWidget(self.explosive_type_dropdown)
         form_layout.addWidget(self.quantity_label)
         form_layout.addWidget(self.quantity_entry)
+        form_layout.addWidget(self.resources_label)
+        form_layout.addWidget(self.resources_entry)
         form_layout.addWidget(self.calculate_button)
 
         # Add widgets to result layout
@@ -155,6 +188,7 @@ class BoomCalculatorApp(QWidget):
         """)
 
     def on_calculate(self):
+        # Get user input for explosive type and quantity
         explosive_type = self.explosive_type_dropdown.currentText()
         try:
             quantity = int(self.quantity_entry.text())
@@ -167,6 +201,24 @@ class BoomCalculatorApp(QWidget):
             return
 
         result = calcResources(explosive_type, quantity)
+
+        # Parse raw resources from input
+        raw_resources_input = self.resources_entry.text()
+        raw_resources = {}
+
+        if raw_resources_input:
+            try:
+                for entry in raw_resources_input.split(","):
+                    resource, amount = entry.split("=")
+                    raw_resources[resource.strip()] = int(amount.strip())
+            except ValueError:
+                self.show_error("Invalid Input", "Please enter the resources in the correct format.")
+                return
+
+            # Check how many items can be crafted based on raw resources
+            craftable_result = checkCraftable(raw_resources)
+            result += "\n\n" + craftable_result
+
         self.result_text.setPlainText(result)
 
     def show_error(self, title, message):

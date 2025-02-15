@@ -56,6 +56,7 @@ class BoomCalculatorApp(QWidget):
         # Layouts
         main_layout = QVBoxLayout(self)
         form_layout = QVBoxLayout()
+        result_layout = QVBoxLayout()  # Separate layout for results
         button_layout = QHBoxLayout()
 
         # Explosive Type Dropdown
@@ -82,18 +83,23 @@ class BoomCalculatorApp(QWidget):
         self.result_text.setReadOnly(True)
         self.result_text.setPlaceholderText("Results will be shown here...")
 
-        # Add widgets to layouts
+        # Add widgets to form layout
         form_layout.addWidget(self.explosive_type_label)
         form_layout.addWidget(self.explosive_type_dropdown)
         form_layout.addWidget(self.quantity_label)
         form_layout.addWidget(self.quantity_entry)
+        form_layout.addWidget(self.calculate_button)
 
-        button_layout.addWidget(self.calculate_button)
-        button_layout.addWidget(self.quit_button)
+        # Add widgets to result layout
+        result_layout.addWidget(self.result_text)
 
+        # Add form layout and result layout to main layout
         main_layout.addLayout(form_layout)
+        main_layout.addLayout(result_layout)
+
+        # Add quit button to the bottom of the layout
+        button_layout.addWidget(self.quit_button)
         main_layout.addLayout(button_layout)
-        main_layout.addWidget(self.result_text)
 
         self.setLayout(main_layout)
 

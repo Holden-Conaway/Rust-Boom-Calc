@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 
 # Crafting recipes dictionary
 craftingRecipes = {
@@ -37,7 +37,6 @@ def calcResources(exploType, quantity):
         return f"Error: That isn't a valid explosive type."
 
     recipe = craftingRecipes[exploType]
-
     totalResources = {resource: amount * quantity for resource, amount in recipe.items()}
 
     result = f"To craft {quantity} {exploType}(s), you need:\n"
@@ -47,7 +46,6 @@ def calcResources(exploType, quantity):
     return result
 
 def on_calculate():
-    # Get the selected explosive type and quantity
     explosive_type = explosive_type_var.get()
     try:
         quantity = int(quantity_entry.get())
@@ -59,38 +57,47 @@ def on_calculate():
         messagebox.showerror("Invalid Explosive", "Please select a valid explosive type.")
         return
 
-    # Calculate the resources required and display the result
     result = calcResources(explosive_type, quantity)
-    result_text.delete(1.0, tk.END)  # Clear the result box
+    result_text.config(state=tk.NORMAL)
+    result_text.delete(1.0, tk.END)
     result_text.insert(tk.END, result)
+    result_text.config(state=tk.DISABLED)
 
 # Set up the main window
 root = tk.Tk()
 root.title("Rust Boom Calculator")
+root.geometry("400x400")
+root.configure(bg="#2c3e50")
 
-# Set up the explosive type selection (dropdown)
-explosive_type_label = tk.Label(root, text="Select Explosive Type:")
+style = ttk.Style()
+style.configure("TLabel", foreground="white", background="#2c3e50", font=("Arial", 12))
+style.configure("TButton", font=("Arial", 12), padding=5)
+style.configure("TEntry", font=("Arial", 12))
+style.configure("TCombobox", font=("Arial", 12))
+
+# Explosive Type Selection
+explosive_type_label = ttk.Label(root, text="Select Explosive Type:")
 explosive_type_label.pack(pady=5)
 
 explosive_type_var = tk.StringVar()
-explosive_type_var.set("Satchel Charge")  # Default value
-explosive_type_dropdown = tk.OptionMenu(root, explosive_type_var, *craftingRecipes.keys())
+explosive_type_var.set("Satchel Charge")
+explosive_type_dropdown = ttk.Combobox(root, textvariable=explosive_type_var, values=list(craftingRecipes.keys()), state="readonly")
 explosive_type_dropdown.pack(pady=5)
 
-# Set up the quantity input
-quantity_label = tk.Label(root, text="Enter Quantity:")
+# Quantity Input
+quantity_label = ttk.Label(root, text="Enter Quantity:")
 quantity_label.pack(pady=5)
 
-quantity_entry = tk.Entry(root)
-quantity_entry.pack(pady=5)
+quantity_entry = ttk.Entry(root, font=("Arial", 14), justify="center")
+quantity_entry.pack(pady=5, ipadx=5, ipady=5)
 
-# Set up the calculate button
-calculate_button = tk.Button(root, text="Calculate Resources", command=on_calculate)
+# Calculate Button
+calculate_button = ttk.Button(root, text="Calculate Resources", command=on_calculate)
 calculate_button.pack(pady=10)
 
-# Set up the result text box
-result_text = tk.Text(root, height=10, width=50)
-result_text.pack(pady=10)
+# Result Text Box
+result_text = tk.Text(root, height=10, width=50, state=tk.DISABLED, font=("Arial", 12), wrap=tk.WORD, bg="#ecf0f1")
+result_text.pack(pady=10, padx=10)
 
 # Run the application
 root.mainloop()

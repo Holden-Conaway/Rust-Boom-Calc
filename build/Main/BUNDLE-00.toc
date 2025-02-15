@@ -1,0 +1,3 @@
+([('Main',
+   '/Users/holdenconaway/Code/Rust-Boom-Calc/dist/Main',
+   'EXECUTABLE')],)
